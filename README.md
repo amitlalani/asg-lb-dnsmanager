@@ -7,6 +7,7 @@ Infrastructure and lambda function to allow an autoscaling group to be load bala
 * Python 2.7
 * Python Pip
 * AWS Credentials
+* Route53 Domain
 
 # Setup
 # Depedencies
@@ -14,6 +15,9 @@ Infrastructure and lambda function to allow an autoscaling group to be load bala
 2. aws configure - Follow instructions
 
 # Lambda Setup
+## Adjust Settings
+Update variables at the top of `lambdaDNSManagerFunction/autoscalingDNSManager.py` to match your environment
+
 ## Upload Code to S3
 `cd lambdaDNSManagerFunction`
 `./upload_code.sh v1`
