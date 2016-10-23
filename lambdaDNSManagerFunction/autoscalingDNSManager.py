@@ -3,6 +3,7 @@ from __future__ import print_function
 import ast
 import boto3
 
+DNS_ZONE_ID = 'Z36AIH4YKD3FXS'
 DNS_DOMAIN = 'lalani.co'
 DNS_PREFIX = 'nginx-lb'
 
@@ -57,7 +58,7 @@ def main(event, context):
 def find_dns_records_by_set_id(set_id):
     # Get all DNS Records
     records = r53.list_resource_record_sets(
-        HostedZoneId='Z2ZUW3ROU7FIKN',
+        HostedZoneId=DNS_ZONE_ID,
         StartRecordName='{}.{}'.format(DNS_PREFIX, DNS_DOMAIN)
     )['ResourceRecordSets']
 
@@ -91,7 +92,7 @@ def update_dns(instance_id, instance_dns, action, health_check_id=None):
 
     print("Record Set: {}".format(record_set))
     response = r53.change_resource_record_sets(
-        HostedZoneId='Z2ZUW3ROU7FIKN',
+        HostedZoneId=DNS_ZONE_ID,
         ChangeBatch={
             'Changes': [
                 {
