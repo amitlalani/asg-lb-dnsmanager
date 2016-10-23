@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Sentry App Box
+Description: Infrastructure for ASG DNS Management
 
 Parameters:
     InstanceType:
@@ -30,10 +30,10 @@ Resources:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
       AvailabilityZones:
-      DesiredCapacity: 2
       HealthCheckType: EC2
       LaunchConfigurationName:
         Ref: LaunchConfiguration
+      MaxSize: 1
       MaxSize: 3
       NotificationConfigurations:
         - TopicARN:
