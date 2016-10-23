@@ -12,27 +12,30 @@ Parameters:
     Type: String
     Default: code-v1.zip
 
-DN ManagerLambdaFunction:
-  Type: 'AWS::Lambda::Function'
-  Properties:
-    Code:
+Resources:
+  DNSManagerLambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
         S3Bucket:
           Ref: S3Bucket
         S3Key:
           Ref: S3BucketKey
-    Description: Lambda Function to manage DNS entries for autoscaling events
-    FunctionName: AutoScalingDNSManager
-    Handler: lambda_function.main
-    MemorySize: 512
-    Runtime: python2.7
-    Role:
-      Ref: LambdaIAMRole
-    # High timeout to allow for function to deal with extended instance spin up times.
-    Timeout: 300
+      Description: Lambda Function to manage DNS entries for autoscaling events
+      FunctionName: AutoScalingDNSManager
+      Handler: autoscalingDNSManager.main
+      MemorySize: 512
+      Runtime: python2.7
+      Role:
+        Fn::GetAtt:
+          - LambdaIAMRole
+          - Arn
+      # High timeout to allow for function to deal with extended instance spin up times.
+      Timeout: 300
 
   LambdaIAMRole:
     Type: 'AWS::IAM::Role'
-    Properties:Resource:
+    Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -40,10 +43,11 @@ DN ManagerLambdaFunction:
             Effect: Allow
             Principal:
               Service:
-                - ec2.amazonaws.com
+                - lambda.amazonaws.com
             Action:
-              - ec2.amazonaws.com
+              - sts:AssumeRole
       Path: /
+
   LambdaIAMRolePolicies:
     Type: 'AWS::IAM::Policy'
     Properties:
@@ -56,7 +60,8 @@ DN ManagerLambdaFunction:
             Action:
               # Read Only EC2 Access
               - 'ec2:Describe*'
-              # Full S3/Route53 Access - Should be more restrictive but for POC this will suffice
+              # Full Logs/S3/Route53 Access - Should be more restrictive but for POC this will suffice
+              - 'logs:*'
               - 's3:*'
               - 'route53:*'
             Resource: '*'
@@ -64,13 +69,13 @@ DN ManagerLambdaFunction:
         -
           Ref: LambdaIAMRole
 
-  LambdaIAMProfile:
-    Type: 'AWS::IAM::InstanceProfile'
-    Properties:
-      Path: /
-      Roles:
-        -
-          Ref: LambdaIAMRole
+#  LambdaIAMProfile:
+#    Type: 'AWS::IAM::InstanceProfile'
+#    Properties:
+#      Path: /
+#      Roles:
+#        -
+#          Ref: LambdaIAMRole
 
 
 
