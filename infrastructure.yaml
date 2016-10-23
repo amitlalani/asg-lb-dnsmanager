@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Sentry App Box
+
+Parameters:
+    InstanceType:
+      Type: String
+      Default: t2.micro
+    ImageId: String
+      Type: String
+      #Default: ami-18256f6f
+      Default: ami-381e742f
+    KeyName:
+      Type: String
+    VpcId:
+      Type: String
+    PublicSubnetList:
+      Type: CommaDelimitedList
+    LambdaFunctionName:
+      Type: String
+      Default: AutoScalingDNSManager
+
+
+Resources:
+  AutoScalingGroupSNSTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      DisplayName: 'AutoScalingDNSManagerSNS'
+
+  AutoScalingGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      AvailabilityZones:
+      DesiredCapacity: 2
+      HealthCheckType: EC2
+      LaunchConfigurationName:
+        Ref: LaunchConfiguration
+      MaxSize: 3
+      NotificationConfigurations:
+        - TopicARN:
+            Ref: AutoScalingGroupSNSTopic
+
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_TERMINATE
+
+  LaunchConfiguration:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      AssociatePublicIpAddress: True
+      ImageId:
+        Ref: 'ImageId'
+      InstanceType:
+        Ref: 'InstanceType'
+      KeyName:
+        Fn::If:
+          - UseSSHKey
+          - Ref: KeyName
+          - Ref: AWS::NoValue
+      SecurityGroups:
+        Ref: WebServerSecurityGroup
+
+
+  LambaFunctionEventListener:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn:
+        Ref: AutoScalingGroupSNSTopic
+
+  WebServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Inbound HTTP Rule
+      SecurityGroupIngress:
+            - IpProtocol: tcp
+              FromPort: '80'
+              ToPort: '80'
+              CidrIp: 0.0.0.0/0
+              Tags:
+      VpcId:
+        Ref: VpcId
+
